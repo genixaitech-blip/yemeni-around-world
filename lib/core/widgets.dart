@@ -109,10 +109,10 @@ class _Meta extends StatelessWidget {
   Widget build(BuildContext context) => Row(mainAxisSize: MainAxisSize.min, children: [Icon(icon, size: 15, color: color), const SizedBox(width: 3), Text(text, style: Theme.of(context).textTheme.bodyMedium)]);
 }
 
-class AsyncBody<T> extends StatelessWidget {
+class AsyncBody<ValueT> extends StatelessWidget {
   const AsyncBody({required this.value, required this.builder, super.key});
-  final AsyncValue<T> value;
-  final Widget Function(T data) builder;
+  final AsyncValue<ValueT> value;
+  final Widget Function(ValueT data) builder;
   @override
   Widget build(BuildContext context) => value.when(
     data: builder,
