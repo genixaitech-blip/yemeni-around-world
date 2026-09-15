@@ -20,6 +20,9 @@ abstract final class AppConfig {
 
   static Future<void> initialize() async {
     if (!hasSupabase) return;
-    await Supabase.initialize(url: supabaseUrl, anonKey: supabaseAnonKey);
+    await Supabase.initialize(
+      url: supabaseUrl,
+      publishableKey: supabaseAnonKey,
+    );
   }
 }
