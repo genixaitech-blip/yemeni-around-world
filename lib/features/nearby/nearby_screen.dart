@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/app_theme.dart';
 import '../../core/locale_controller.dart';
 import '../../core/widgets.dart';
-import '../../data/app_repository.dart';
 import '../../data/models.dart';
 import '../../data/providers.dart';
 
