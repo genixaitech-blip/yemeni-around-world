@@ -15,6 +15,11 @@ abstract final class AppColors {
   static const canvas = Color(0xFFFAF6EF);
   static const line = Color(0xFFE7E1D3);
   static const muted = Color(0xFF64707A);
+
+  // أسماء قديمة للتوافق مع باقي الشاشات — لا تحذفها
+  static const forest = navy;
+  static const coral = gold;
+  static const mint = skyTint;
 }
 
 /// تدرجات جاهزة على الأزرار والعناصر المميزة.
