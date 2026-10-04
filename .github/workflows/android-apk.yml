@@ -29,7 +29,9 @@ jobs:
           cache: true
 
       - name: Create Android platform files
-        run: flutter create . --platforms=android --project-name yemeni_world --org com.genix
+        run: |
+          flutter create . --platforms=android --project-name yemeni_world --org com.genix
+          rm -f test/widget_test.dart
 
       - name: Install dependencies
         run: flutter pub get
