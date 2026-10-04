@@ -121,9 +121,9 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 13),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: .07),
+                      color: Colors.white.withOpacity(.07),
                       borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: Colors.white.withValues(alpha: .12)),
+                      border: Border.all(color: Colors.white.withOpacity(.12)),
                     ),
                     child: Row(
                       children: [
@@ -218,9 +218,9 @@ class _BrandMark extends StatelessWidget {
       height: 46,
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .08),
+        color: Colors.white.withOpacity(.08),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: .13)),
+        border: Border.all(color: Colors.white.withOpacity(.13)),
       ),
       child: Image.asset('assets/images/app_icon.png', fit: BoxFit.contain),
     );
@@ -238,9 +238,9 @@ class _LanguageSwitch extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: .07),
+        color: Colors.white.withOpacity(.07),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: .12)),
+        border: Border.all(color: Colors.white.withOpacity(.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -269,7 +269,7 @@ class _LangButton extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 7),
         decoration: BoxDecoration(
-          color: selected ? Colors.white.withValues(alpha: .13) : Colors.transparent,
+          color: selected ? Colors.white.withOpacity(.13) : Colors.transparent,
           borderRadius: BorderRadius.circular(11),
         ),
         child: Text(
@@ -297,15 +297,15 @@ class _WorldPainter extends CustomPainter {
     final glow = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF2AA1D2).withValues(alpha: .18),
-          const Color(0xFF2AA1D2).withValues(alpha: .04),
+          const Color(0xFF2AA1D2).withOpacity(.18),
+          const Color(0xFF2AA1D2).withOpacity(.04),
           Colors.transparent,
         ],
       ).createShader(Rect.fromCircle(center: center, radius: radius * 1.5));
     canvas.drawCircle(center, radius * 1.5, glow);
 
     final line = Paint()
-      ..color = const Color(0xFF72B8D2).withValues(alpha: .17)
+      ..color = const Color(0xFF72B8D2).withOpacity(.17)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1;
 
@@ -337,7 +337,7 @@ class _WorldPainter extends CustomPainter {
     ];
 
     final routePaint = Paint()
-      ..color = const Color(0xFFC9A063).withValues(alpha: .28)
+      ..color = const Color(0xFFC9A063).withOpacity(.28)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.3;
 
@@ -360,12 +360,12 @@ class _WorldPainter extends CustomPainter {
       canvas.drawCircle(
         points[i],
         8 + 3 * pulse,
-        Paint()..color = color.withValues(alpha: .08 + .09 * pulse),
+        Paint()..color = color.withOpacity(.08 + .09 * pulse),
       );
       canvas.drawCircle(
         points[i],
         i == 1 ? 3.8 : 2.7,
-        Paint()..color = color.withValues(alpha: .68 + .25 * pulse),
+        Paint()..color = color.withOpacity(.68 + .25 * pulse),
       );
     }
   }
