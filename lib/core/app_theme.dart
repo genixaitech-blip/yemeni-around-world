@@ -41,7 +41,7 @@ abstract final class AppGradients {
 abstract final class AppShadows {
   static List<BoxShadow> card = [
     BoxShadow(
-      color: AppColors.navy.withValues(alpha: 0.08),
+      color: AppColors.navy.withOpacity(0.08),
       blurRadius: 24,
       offset: const Offset(0, 10),
     ),
@@ -49,7 +49,7 @@ abstract final class AppShadows {
 
   static List<BoxShadow> floating = [
     BoxShadow(
-      color: AppColors.ink.withValues(alpha: 0.14),
+      color: AppColors.ink.withOpacity(0.14),
       blurRadius: 20,
       offset: const Offset(0, 8),
     ),
@@ -125,7 +125,7 @@ abstract final class AppTheme {
           color: AppColors.ink,
         ),
       ),
-      cardTheme: CardThemeData(
+      cardTheme: CardTheme(
         elevation: 0,
         color: Colors.white,
         surfaceTintColor: Colors.transparent,
