@@ -108,5 +108,5 @@ class _SelectField extends StatelessWidget {
   final List<String> values;
   final ValueChanged<String?> onChanged;
   @override
-  Widget build(BuildContext context) => DropdownButtonFormField<String>(value: value, decoration: InputDecoration(labelText: label), items: values.map((item) => DropdownMenuItem(value: item, child: Text(item, overflow: TextOverflow.ellipsis))).toList(), onChanged: onChanged);
+  Widget build(BuildContext context) => DropdownButtonFormField<String>(initialValue: value, decoration: InputDecoration(labelText: label), items: values.map((item) => DropdownMenuItem(value: item, child: Text(item, overflow: TextOverflow.ellipsis))).toList(), onChanged: onChanged);
 }
