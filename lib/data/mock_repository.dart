@@ -310,12 +310,21 @@ class MockAppRepository implements AppRepository {
 
   @override
   Future<List<ServiceRequest>> getRequests() async =>
-      [..._requests, ...requests].map((item) => ServiceRequest(
-        id: item.id, title: item.title, description: item.description,
-        place: item.place, categoryId: item.categoryId, createdAgo: item.createdAgo,
-        offerCount: _proposals[item.id]?.length ?? 0, budget: item.budget,
-        startsAt: item.startsAt, requesterId: item.requesterId, currency: item.currency,
-      )).toList();
+      [..._requests, ...requests]
+          .map((item) => ServiceRequest(
+                id: item.id,
+                title: item.title,
+                description: item.description,
+                place: item.place,
+                categoryId: item.categoryId,
+                createdAgo: item.createdAgo,
+                offerCount: _proposals[item.id]?.length ?? 0,
+                budget: item.budget,
+                startsAt: item.startsAt,
+                requesterId: item.requesterId,
+                currency: item.currency,
+              ))
+          .toList();
 
   @override
   Future<ServiceRequest?> getRequest(String id) async {

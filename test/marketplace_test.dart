@@ -5,6 +5,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:yemeni_world/data/mock_repository.dart';
 import 'package:yemeni_world/data/providers.dart';
 import 'package:yemeni_world/features/requests/request_detail_screen.dart';
+import 'package:yemeni_world/features/chat/chat_screen.dart';
 
 class ControlledRepository extends MockAppRepository {
   final save = Completer<void>();
@@ -15,6 +16,12 @@ class ControlledRepository extends MockAppRepository {
           required String description,
           required String deliveryTime}) =>
       save.future;
+}
+
+class ControlledChatRepository extends MockAppRepository {
+  final send = Completer<void>();
+  @override
+  Future<void> sendMessage(String conversationId, String text) => send.future;
 }
 
 Future<void> openOfferForm(
@@ -37,6 +44,26 @@ Future<void> openOfferForm(
 }
 
 void main() {
+  testWidgets('failed message preserves text and does not invent a sent bubble',
+      (tester) async {
+    final repository = ControlledChatRepository();
+    await tester.pumpWidget(ProviderScope(
+        overrides: [
+          appRepositoryProvider.overrideWithValue(repository),
+          signedInProvider.overrideWithValue(true),
+        ],
+        child:
+            const MaterialApp(home: ChatScreen(conversationId: 'test-chat'))));
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField), 'Message to retry');
+    await tester.tap(find.byTooltip('Send'));
+    await tester.pump();
+    repository.send.completeError(StateError('offline'));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('Message was not sent'), findsOneWidget);
+    expect(find.widgetWithText(TextField, 'Message to retry'), findsOneWidget);
+    expect(find.text('Message to retry'), findsOneWidget);
+  });
   test('demo preserves requests, submitted offers and conversation history',
       () async {
     final repository = MockAppRepository();

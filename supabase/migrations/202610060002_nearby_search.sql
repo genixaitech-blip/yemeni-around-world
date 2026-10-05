@@ -9,7 +9,7 @@ returns table(profile_id uuid, distance_m double precision) language sql stable 
   order by distance_m limit least(greatest(result_limit,1), 100);
 $$;
 
-do $ begin
+do $$ begin
   if not exists(select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
       where t.typname = 'directory_entry' and n.nspname = 'public') then
     create type public.directory_entry as (
@@ -19,7 +19,7 @@ do $ begin
       latitude double precision, longitude double precision, distance_km double precision, available_now boolean
     );
   end if;
-end $;
+end $$;
 drop function if exists public.search_directory(text,text,text,text,boolean,text,double precision,double precision,integer);
 
 create or replace function public.search_directory(
