@@ -1,5 +1,14 @@
 begin;
 
+create or replace function public.nearby_profiles(origin_lat double precision, origin_lng double precision, radius_m integer default 25000, result_limit integer default 20)
+returns table(profile_id uuid, distance_m double precision) language sql stable set search_path = public as $$
+  select p.id, st_distance(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography) as distance_m
+  from public.profiles p
+  where p.publication = 'published' and p.deleted_at is null and p.approximate_location is not null
+    and st_dwithin(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography, least(greatest(radius_m,1000), 100000))
+  order by distance_m limit least(greatest(result_limit,1), 100);
+$$;
+
 do $ begin
   if not exists(select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
       where t.typname = 'directory_entry' and n.nspname = 'public') then
