@@ -7,7 +7,11 @@ class PlaceRef {
 }
 
 class Category {
-  const Category({required this.id, required this.nameAr, required this.nameEn, required this.icon});
+  const Category(
+      {required this.id,
+      required this.nameAr,
+      required this.nameEn,
+      required this.icon});
   final String id;
   final String nameAr;
   final String nameEn;
@@ -64,6 +68,9 @@ class ServiceRequest {
     required this.createdAgo,
     required this.offerCount,
     this.budget,
+    this.startsAt,
+    this.requesterId,
+    this.currency = 'USD',
   });
   final String id;
   final String title;
@@ -73,6 +80,9 @@ class ServiceRequest {
   final String createdAgo;
   final int offerCount;
   final int? budget;
+  final DateTime? startsAt;
+  final String? requesterId;
+  final String currency;
 }
 
 class DealOffer {
@@ -95,8 +105,35 @@ class DealOffer {
 }
 
 class ChatMessage {
-  const ChatMessage({required this.text, required this.mine, required this.time});
+  const ChatMessage(
+      {required this.text,
+      required this.mine,
+      required this.time,
+      this.id = ''});
+  final String id;
   final String text;
   final bool mine;
   final String time;
+}
+
+class RequestProposal {
+  const RequestProposal(
+      {required this.id,
+      required this.providerName,
+      required this.price,
+      required this.description,
+      this.currency = 'USD',
+      this.deliveryTime = ''});
+  final String id;
+  final String providerName;
+  final double price;
+  final String description;
+  final String currency;
+  final String deliveryTime;
+}
+
+class ConversationSummary {
+  const ConversationSummary({required this.id, required this.title});
+  final String id;
+  final String title;
 }

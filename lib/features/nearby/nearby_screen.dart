@@ -1,8 +1,10 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
+import 'package:geolocator/geolocator.dart';
+import 'package:go_router/go_router.dart';
+import 'package:latlong2/latlong.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/app_theme.dart';
 import '../../core/locale_controller.dart';
 import '../../core/widgets.dart';
@@ -17,78 +19,168 @@ class NearbyScreen extends ConsumerStatefulWidget {
 
 class _NearbyScreenState extends ConsumerState<NearbyScreen> {
   bool map = false;
-  late Future<List<Listing>> results;
-  @override
-  void initState() { super.initState(); results = ref.read(appRepositoryProvider).search(nearby: true); }
+  bool locating = false;
+  Position? origin;
+  Future<List<Listing>>? results;
+  String? locationError;
+  Future<void> locate() async {
+    setState(() {
+      locating = true;
+      locationError = null;
+    });
+    try {
+      if (!await Geolocator.isLocationServiceEnabled()) {
+        throw StateError('services');
+      }
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        throw StateError('permission');
+      }
+      final point = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.medium,
+              timeLimit: Duration(seconds: 20)));
+      if (!mounted) return;
+      setState(() {
+        origin = point;
+        results = ref.read(appRepositoryProvider).search(
+            nearby: true,
+            originLat: point.latitude,
+            originLng: point.longitude);
+      });
+    } catch (_) {
+      if (mounted) {
+        setState(() => locationError = T(context).text(
+            'تعذر تحديد الموقع. فعّل خدمة الموقع واسمح بالوصول إليه، ثم أعد المحاولة.',
+            'Could not get location. Enable location services and allow access, then retry.'));
+      }
+    } finally {
+      if (mounted) setState(() => locating = false);
+    }
+  }
+
+  void retrySearch() {
+    final point = origin;
+    if (point != null) {
+      setState(() => results = ref.read(appRepositoryProvider).search(
+          nearby: true, originLat: point.latitude, originLng: point.longitude));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = T(context);
     return Scaffold(
-      appBar: AppBar(title: Text(t.text('قريب مني', 'Nearby')), actions: [
-        Padding(padding: const EdgeInsetsDirectional.only(end: 12), child: SegmentedButton<bool>(
-          showSelectedIcon: false,
-          segments: [ButtonSegment(value: false, icon: const Icon(Icons.view_list), tooltip: t.text('قائمة', 'List')), ButtonSegment(value: true, icon: const Icon(Icons.map_outlined), tooltip: t.text('خريطة', 'Map'))],
-          selected: {map},
-          onSelectionChanged: (value) => setState(() => map = value.first),
-        )),
-      ]),
-      body: FutureBuilder<List<Listing>>(
-        future: results,
-        builder: (context, snapshot) {
-          if (!snapshot.hasData) return const Center(child: CircularProgressIndicator());
-          final items = snapshot.data!;
-          return AnimatedSwitcher(duration: const Duration(milliseconds: 240), child: map ? _MapView(items: items) : _ListView(items: items));
-        },
-      ),
-    );
+        appBar: AppBar(title: Text(t.text('قريب مني', 'Nearby')), actions: [
+          IconButton(
+              tooltip: t.text('تحديث الموقع', 'Refresh location'),
+              onPressed: locating ? null : locate,
+              icon: const Icon(Icons.my_location)),
+          if (origin != null)
+            IconButton(
+                tooltip:
+                    t.text('تبديل الخريطة والقائمة', 'Toggle map and list'),
+                onPressed: () => setState(() => map = !map),
+                icon: Icon(map ? Icons.view_list : Icons.map_outlined)),
+        ]),
+        body: locating
+            ? const Center(child: CircularProgressIndicator())
+            : locationError != null || results == null
+                ? Center(
+                    child: Padding(
+                        padding: const EdgeInsets.all(24),
+                        child:
+                            Column(mainAxisSize: MainAxisSize.min, children: [
+                          Text(
+                              locationError ??
+                                  t.text(
+                                      'استخدم موقعك للعثور على خدمات ضمن 100 كم. الموقع اختياري ولا يُحفظ في حسابك.',
+                                      'Use your location to find services within 100 km. Location is optional and is not saved to your account.'),
+                              textAlign: TextAlign.center),
+                          const SizedBox(height: 16),
+                          FilledButton(
+                              onPressed: locate,
+                              child: Text(
+                                  t.text('تحديد موقعي', 'Use my location'))),
+                        ])))
+                : FutureBuilder<List<Listing>>(
+                    future: results,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasError) {
+                        return Center(
+                            child: TextButton(
+                                onPressed: retrySearch,
+                                child: Text(t.text(
+                                    'تعذر تحميل النتائج. أعد المحاولة',
+                                    'Could not load results. Retry'))));
+                      }
+                      if (snapshot.connectionState != ConnectionState.done) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      final items = snapshot.data ?? [];
+                      if (items.isEmpty) {
+                        return Center(
+                            child: Text(t.text(
+                                'لا توجد خدمات ذات موقع متاح ضمن 100 كم.',
+                                'No services with a location found within 100 km.')));
+                      }
+                      return map
+                          ? _MapView(
+                              items: items,
+                              origin:
+                                  LatLng(origin!.latitude, origin!.longitude))
+                          : ListView.separated(
+                              padding: const EdgeInsets.all(20),
+                              itemCount: items.length,
+                              separatorBuilder: (_, __) =>
+                                  const Divider(height: 1),
+                              itemBuilder: (_, index) =>
+                                  ListingTile(listing: items[index]));
+                    }));
   }
-}
-
-class _ListView extends StatelessWidget {
-  const _ListView({required this.items});
-  final List<Listing> items;
-  @override
-  Widget build(BuildContext context) => ListView.separated(padding: const EdgeInsets.fromLTRB(20, 8, 20, 30), itemCount: items.length, separatorBuilder: (_, __) => const Divider(height: 1), itemBuilder: (_, index) => ListingTile(listing: items[index]));
 }
 
 class _MapView extends StatelessWidget {
-  const _MapView({required this.items});
+  const _MapView({required this.items, required this.origin});
   final List<Listing> items;
+  final LatLng origin;
   @override
-  Widget build(BuildContext context) => Stack(children: [
-    Positioned.fill(child: CustomPaint(painter: _MapPainter())),
-    for (var i = 0; i < items.length; i++)
-      Positioned(
-        left: (35 + (i * 93) % math.max(120, MediaQuery.sizeOf(context).width.toInt() - 110)).toDouble(),
-        top: (75 + (i * 118) % math.max(160, MediaQuery.sizeOf(context).height.toInt() - 300)).toDouble(),
-        child: Tooltip(
-          message: items[i].name,
-          child: Container(padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 7), decoration: BoxDecoration(color: AppColors.forest, borderRadius: BorderRadius.circular(7), boxShadow: const [BoxShadow(color: Color(0x33000000), blurRadius: 8)]), child: Row(mainAxisSize: MainAxisSize.min, children: [const Icon(Icons.location_on, size: 16, color: Colors.white), const SizedBox(width: 3), Text(items[i].distanceKm == null ? items[i].name : '${items[i].distanceKm!.toStringAsFixed(1)} كم', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800))])),
-        ),
-      ),
-    Positioned(left: 16, right: 16, bottom: 18, child: Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), boxShadow: const [BoxShadow(color: Color(0x28000000), blurRadius: 16)]),
-      child: Row(children: [const Icon(Icons.privacy_tip_outlined, color: AppColors.forest), const SizedBox(width: 10), Expanded(child: Text(T(context).text('نعرض المواقع العامة فقط، ومناطق خدمة تقريبية للأفراد.', 'Only public locations and approximate service areas are shown.'), style: Theme.of(context).textTheme.bodyMedium))]),
-    )),
-  ]);
-}
-
-class _MapPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    canvas.drawRect(Offset.zero & size, Paint()..color = const Color(0xFFE9EFEA));
-    final road = Paint()..color = Colors.white..strokeWidth = 13..style = PaintingStyle.stroke;
-    final minor = Paint()..color = const Color(0xFFD2DED5)..strokeWidth = 2..style = PaintingStyle.stroke;
-    for (var i = -1; i < 7; i++) {
-      final y = i * 105.0;
-      canvas.drawPath(Path()..moveTo(0, y + 45)..quadraticBezierTo(size.width * .5, y - 5, size.width, y + 48), road);
-      canvas.drawLine(Offset(i * 90.0, 0), Offset(i * 90.0 + 180, size.height), minor);
-    }
-    canvas.drawCircle(Offset(size.width * .48, size.height * .42), 10, Paint()..color = const Color(0xFF2378D4));
-    canvas.drawCircle(Offset(size.width * .48, size.height * .42), 22, Paint()..color = const Color(0x332378D4));
-  }
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  Widget build(BuildContext context) => FlutterMap(
+          options: MapOptions(initialCenter: origin, initialZoom: 11),
+          children: [
+            TileLayer(
+                urlTemplate: const String.fromEnvironment('MAP_TILE_URL',
+                    defaultValue:
+                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png'),
+                userAgentPackageName: 'com.genix.yemeni_world'),
+            MarkerLayer(markers: [
+              Marker(
+                  point: origin,
+                  width: 32,
+                  height: 32,
+                  child: const Icon(Icons.my_location,
+                      color: Colors.blue, size: 28)),
+              for (final item in items)
+                if (item.latitude != null && item.longitude != null)
+                  Marker(
+                      point: LatLng(item.latitude!, item.longitude!),
+                      width: 48,
+                      height: 48,
+                      child: IconButton(
+                          tooltip: item.name,
+                          icon: const Icon(Icons.location_on,
+                              color: AppColors.forest, size: 36),
+                          onPressed: () =>
+                              context.push('/listing/${item.id}'))),
+            ]),
+            RichAttributionWidget(attributions: [
+              TextSourceAttribution('OpenStreetMap contributors',
+                  onTap: () => launchUrl(
+                      Uri.parse('https://www.openstreetmap.org/copyright'))),
+            ]),
+          ]);
 }

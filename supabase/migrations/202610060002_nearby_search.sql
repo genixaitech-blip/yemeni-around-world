@@ -1,11 +1,17 @@
 begin;
 
-create type public.directory_entry as (
-  id text, entity_type text, name text, subtitle text, category_slug text,
-  country_name text, city_name text, rating double precision, review_count integer,
-  verified boolean, image_url text, about text, languages text[], price_from numeric,
-  latitude double precision, longitude double precision, distance_km double precision, available_now boolean
-);
+do $ begin
+  if not exists(select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
+      where t.typname = 'directory_entry' and n.nspname = 'public') then
+    create type public.directory_entry as (
+      id text, entity_type text, name text, subtitle text, category_slug text,
+      country_name text, city_name text, rating double precision, review_count integer,
+      verified boolean, image_url text, about text, languages text[], price_from numeric,
+      latitude double precision, longitude double precision, distance_km double precision, available_now boolean
+    );
+  end if;
+end $;
+drop function if exists public.search_directory(text,text,text,text,boolean,text,double precision,double precision,integer);
 
 create or replace function public.search_directory(
   search_query text default '',
