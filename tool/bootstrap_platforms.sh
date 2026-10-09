@@ -10,6 +10,8 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$project_root"
 
 flutter create --platforms=android,ios --org com.yemeniworld --project-name yemeni_world .
+rm -f test/widget_test.dart
+python3 tool/configure_location.py
 flutter pub get
 flutter analyze
 flutter test

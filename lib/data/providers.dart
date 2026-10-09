@@ -15,41 +15,79 @@ final appRepositoryProvider = Provider<AppRepository>((ref) {
   final client = ref.watch(supabaseClientProvider);
   return client == null ? MockAppRepository() : SupabaseAppRepository(client);
 });
-final categoriesProvider = FutureProvider<List<Category>>((ref) => ref.watch(appRepositoryProvider).getCategories());
-final homeListingsProvider = FutureProvider<List<Listing>>((ref) => ref.watch(appRepositoryProvider).search());
-final requestsProvider = FutureProvider<List<ServiceRequest>>((ref) => ref.watch(appRepositoryProvider).getRequests());
-final dealsProvider = FutureProvider<List<DealOffer>>((ref) => ref.watch(appRepositoryProvider).getOffers());
+final categoriesProvider = FutureProvider<List<Category>>(
+    (ref) => ref.watch(appRepositoryProvider).getCategories());
+final homeListingsProvider = FutureProvider<List<Listing>>(
+    (ref) => ref.watch(appRepositoryProvider).search());
+final requestsProvider = FutureProvider<List<ServiceRequest>>(
+    (ref) => ref.watch(appRepositoryProvider).getRequests());
+final dealsProvider = FutureProvider<List<DealOffer>>(
+    (ref) => ref.watch(appRepositoryProvider).getOffers());
+final requestDetailProvider =
+    FutureProvider.autoDispose.family<ServiceRequest?, String>((ref, id) {
+  ref.watch(signedInProvider);
+  return ref.watch(appRepositoryProvider).getRequest(id);
+});
+final proposalsProvider =
+    FutureProvider.autoDispose.family<List<RequestProposal>, String>((ref, id) {
+  ref.watch(signedInProvider);
+  return ref.watch(appRepositoryProvider).getProposals(id);
+});
+final conversationsProvider =
+    FutureProvider.autoDispose<List<ConversationSummary>>((ref) {
+  ref.watch(signedInProvider);
+  return ref.watch(appRepositoryProvider).getConversations();
+});
+final messagesProvider =
+    StreamProvider.autoDispose.family<List<ChatMessage>, String>((ref, id) {
+  ref.watch(signedInProvider);
+  return ref.watch(appRepositoryProvider).watchMessages(id);
+});
 final favoritesProvider = StateProvider<Set<String>>((ref) => <String>{});
-final authControllerProvider = StateNotifierProvider<AppAuthController, bool>((ref) {
+final authControllerProvider =
+    StateNotifierProvider<AppAuthController, bool>((ref) {
   return AppAuthController(ref.watch(supabaseClientProvider));
 });
-final signedInProvider = Provider<bool>((ref) => ref.watch(authControllerProvider));
+final signedInProvider =
+    Provider<bool>((ref) => ref.watch(authControllerProvider));
 
 class SearchFilters {
-  const SearchFilters({this.query = '', this.country, this.city, this.categoryId, this.nearby = false});
+  const SearchFilters(
+      {this.query = '',
+      this.country,
+      this.city,
+      this.categoryId,
+      this.nearby = false});
   final String query;
   final String? country;
   final String? city;
   final String? categoryId;
   final bool nearby;
 
-  SearchFilters copyWith({String? query, String? country, String? city, String? categoryId, bool? nearby}) => SearchFilters(
-    query: query ?? this.query,
-    country: country ?? this.country,
-    city: city ?? this.city,
-    categoryId: categoryId ?? this.categoryId,
-    nearby: nearby ?? this.nearby,
-  );
+  SearchFilters copyWith(
+          {String? query,
+          String? country,
+          String? city,
+          String? categoryId,
+          bool? nearby}) =>
+      SearchFilters(
+        query: query ?? this.query,
+        country: country ?? this.country,
+        city: city ?? this.city,
+        categoryId: categoryId ?? this.categoryId,
+        nearby: nearby ?? this.nearby,
+      );
 }
 
-final searchFiltersProvider = StateProvider<SearchFilters>((ref) => const SearchFilters());
+final searchFiltersProvider =
+    StateProvider<SearchFilters>((ref) => const SearchFilters());
 final searchResultsProvider = FutureProvider<List<Listing>>((ref) {
   final filters = ref.watch(searchFiltersProvider);
   return ref.watch(appRepositoryProvider).search(
-    query: filters.query,
-    country: filters.country,
-    city: filters.city,
-    categoryId: filters.categoryId,
-    nearby: filters.nearby,
-  );
+        query: filters.query,
+        country: filters.country,
+        city: filters.city,
+        categoryId: filters.categoryId,
+        nearby: filters.nearby,
+      );
 });

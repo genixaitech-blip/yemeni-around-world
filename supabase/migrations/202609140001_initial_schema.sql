@@ -443,7 +443,7 @@ $$;
 
 create or replace function public.nearby_profiles(origin_lat double precision, origin_lng double precision, radius_m integer default 25000, result_limit integer default 20)
 returns table(profile_id uuid, distance_m double precision) language sql stable as $$
-  select p.id, st_distance(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography)
+  select p.id, st_distance(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography) as distance_m
   from public.profiles p
   where p.publication = 'published' and p.deleted_at is null and p.approximate_location is not null
     and st_dwithin(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography, least(radius_m, 100000))

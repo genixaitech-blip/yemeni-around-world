@@ -84,7 +84,16 @@ class _ListingView extends ConsumerWidget {
           if (listing.availableNow) ...[const SizedBox(height: 8), Row(children: [Container(width: 8, height: 8, decoration: const BoxDecoration(color: Color(0xFF16A36A), shape: BoxShape.circle)), const SizedBox(width: 6), Text(t.text('متاح الآن', 'Available now'), style: const TextStyle(color: Color(0xFF16724E), fontWeight: FontWeight.w700))])],
           const SizedBox(height: 22),
           Row(children: [
-            Expanded(child: FilledButton.icon(onPressed: () => context.push(ref.read(signedInProvider) ? '/chat' : '/auth'), icon: const Icon(Icons.chat_bubble_outline), label: Text(t.text('مراسلة', 'Message')))),
+            Expanded(child: FilledButton.icon(onPressed: () async {
+              if (!ref.read(signedInProvider)) { context.push('/auth'); return; }
+              try {
+                final chatId = await ref.read(appRepositoryProvider).openListingConversation(listing);
+                ref.invalidate(conversationsProvider);
+                if (context.mounted) { context.push('/chat/$chatId'); }
+              } catch (_) {
+                if (context.mounted) { ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(t.text('تعذر بدء المراسلة. قد تكون الصفحة غير مرتبطة بحساب متاح.', 'Could not start messaging. This listing may not have an available account.')))); }
+              }
+            }, icon: const Icon(Icons.chat_bubble_outline), label: Text(t.text('مراسلة', 'Message')))),
             const SizedBox(width: 8),
             IconButton.filledTonal(tooltip: 'WhatsApp', onPressed: () async {
               final uri = Uri.parse('https://wa.me/?text=${Uri.encodeComponent('مرحبًا، وصلت إليك عبر تطبيق يمني حول العالم')}');

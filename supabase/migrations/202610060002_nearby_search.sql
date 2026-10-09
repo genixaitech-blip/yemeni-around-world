@@ -1,11 +1,26 @@
 begin;
 
-create type public.directory_entry as (
-  id text, entity_type text, name text, subtitle text, category_slug text,
-  country_name text, city_name text, rating double precision, review_count integer,
-  verified boolean, image_url text, about text, languages text[], price_from numeric,
-  latitude double precision, longitude double precision, distance_km double precision, available_now boolean
-);
+create or replace function public.nearby_profiles(origin_lat double precision, origin_lng double precision, radius_m integer default 25000, result_limit integer default 20)
+returns table(profile_id uuid, distance_m double precision) language sql stable set search_path = public as $$
+  select p.id, st_distance(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography) as distance_m
+  from public.profiles p
+  where p.publication = 'published' and p.deleted_at is null and p.approximate_location is not null
+    and st_dwithin(p.approximate_location, st_setsrid(st_makepoint(origin_lng, origin_lat), 4326)::geography, least(greatest(radius_m,1000), 100000))
+  order by distance_m limit least(greatest(result_limit,1), 100);
+$$;
+
+do $$ begin
+  if not exists(select 1 from pg_type t join pg_namespace n on n.oid = t.typnamespace
+      where t.typname = 'directory_entry' and n.nspname = 'public') then
+    create type public.directory_entry as (
+      id text, entity_type text, name text, subtitle text, category_slug text,
+      country_name text, city_name text, rating double precision, review_count integer,
+      verified boolean, image_url text, about text, languages text[], price_from numeric,
+      latitude double precision, longitude double precision, distance_km double precision, available_now boolean
+    );
+  end if;
+end $$;
+drop function if exists public.search_directory(text,text,text,text,boolean,text,double precision,double precision,integer);
 
 create or replace function public.search_directory(
   search_query text default '',

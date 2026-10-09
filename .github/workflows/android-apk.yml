@@ -32,6 +32,7 @@ jobs:
         run: |
           flutter create . --platforms=android --project-name yemeni_world --org com.genix
           rm -f test/widget_test.dart
+          python3 tool/configure_location.py
 
       - name: Install dependencies
         run: flutter pub get
