@@ -25,19 +25,51 @@ class ShellScaffold extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = T(context);
     final visibleIndex = shell.currentIndex >= 2 ? shell.currentIndex + 1 : shell.currentIndex;
+    final onHome = shell.currentIndex == 0;
+    final navTheme = NavigationBarThemeData(
+      height: 68,
+      backgroundColor: onHome ? const Color(0xFF04131E) : Colors.white,
+      indicatorColor: onHome
+          ? AppColors.gold.withValues(alpha: .16)
+          : AppColors.skyTint,
+      elevation: 0,
+      surfaceTintColor: Colors.transparent,
+      iconTheme: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return IconThemeData(
+          color: onHome
+              ? (selected ? AppColors.goldLight : const Color(0xFF8297A3))
+              : (selected ? AppColors.navy : AppColors.muted),
+        );
+      }),
+      labelTextStyle: WidgetStateProperty.resolveWith((states) {
+        final selected = states.contains(WidgetState.selected);
+        return TextStyle(
+          fontSize: 11,
+          fontWeight: selected ? FontWeight.w800 : FontWeight.w700,
+          color: onHome
+              ? (selected ? AppColors.goldLight : const Color(0xFF8297A3))
+              : (selected ? AppColors.navy : AppColors.muted),
+        );
+      }),
+    );
+
     return Scaffold(
       body: shell,
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: visibleIndex,
-        onDestinationSelected: (index) => _select(context, index),
-        destinations: [
-          NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: t.text('الرئيسية', 'Home')),
-          NavigationDestination(icon: const Icon(Icons.search), label: t.text('استكشف', 'Explore')),
-          NavigationDestination(icon: const Icon(Icons.add_circle, color: AppColors.coral, size: 32), label: t.text('إضافة', 'Add')),
-          NavigationDestination(icon: const Icon(Icons.favorite_border), selectedIcon: const Icon(Icons.favorite), label: t.text('المفضلة', 'Saved')),
-          NavigationDestination(icon: const Icon(Icons.receipt_long_outlined), selectedIcon: const Icon(Icons.receipt_long), label: t.text('الطلبات', 'Requests')),
-          NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: t.text('حسابي', 'Account')),
-        ],
+      bottomNavigationBar: Theme(
+        data: Theme.of(context).copyWith(navigationBarTheme: navTheme),
+        child: NavigationBar(
+          selectedIndex: visibleIndex,
+          onDestinationSelected: (index) => _select(context, index),
+          destinations: [
+            NavigationDestination(icon: const Icon(Icons.home_outlined), selectedIcon: const Icon(Icons.home), label: t.text('الرئيسية', 'Home')),
+            NavigationDestination(icon: const Icon(Icons.search), label: t.text('استكشف', 'Explore')),
+            NavigationDestination(icon: const Icon(Icons.add_circle, color: AppColors.coral, size: 32), label: t.text('إضافة', 'Add')),
+            NavigationDestination(icon: const Icon(Icons.favorite_border), selectedIcon: const Icon(Icons.favorite), label: t.text('المفضلة', 'Saved')),
+            NavigationDestination(icon: const Icon(Icons.receipt_long_outlined), selectedIcon: const Icon(Icons.receipt_long), label: t.text('الطلبات', 'Requests')),
+            NavigationDestination(icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: t.text('حسابي', 'Account')),
+          ],
+        ),
       ),
     );
   }
