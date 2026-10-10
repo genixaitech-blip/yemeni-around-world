@@ -12,7 +12,7 @@ void main() {
     await tester.tap(find.text('ابدأ الاستكشاف'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('ماذا تبحث عنه؟'), findsOneWidget);
+    expect(find.text('ابحث عن خدمة، شخص أو منشأة'), findsOneWidget);
     expect(find.byIcon(Icons.search), findsWidgets);
   });
 }
