@@ -489,3 +489,11 @@ body { background:#d9e0e3; }
 @media (min-width:700px){
   .bottom{bottom:34px;border-radius:26px}
 }
+
+/* Premium mobile fixes */
+.premium-home { animation:none; }
+.premium-actions { min-width:0; }
+.premium-action { min-width:0; grid-template-columns:40px minmax(0,1fr) auto; }
+.premium-action span:nth-child(2) { min-width:0; }
+.premium-action small { white-space:normal; line-height:1.35; }
+.bottom { position:fixed !important; }
