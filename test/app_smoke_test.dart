@@ -13,6 +13,6 @@ void main() {
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 300));
     expect(find.text('ابحث عن خدمة، شخص أو منشأة'), findsOneWidget);
-    expect(find.byIcon(Icons.search), findsWidgets);
+    expect(find.byIcon(Icons.search_rounded), findsWidgets);
   });
 }
